@@ -1,8 +1,11 @@
 const express = require('express');
 const axios = require('axios');
 const csvWriter = require('csv-writer').createObjectCsvStringifier;
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Получение полных исторических данных за последний месяц с 15-минутным таймфреймом и возможность скачивания CSV файла
 app.get('/historical/:cryptoId', async (req, res) => {
