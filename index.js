@@ -17,14 +17,23 @@ app.get('/historical/:cryptoId', async (req, res) => {
       }
     });
 
-    const formattedData = response.data.prices.map((price, index) => ({
-      time: price[0],
-      open: response.data.prices[index][1],
-      high: response.data.high_24h ? response.data.high_24h[index][1] : null,
-      low: response.data.low_24h ? response.data.low_24h[index][1] : null,
-      close: response.data.prices[index][1],
-      volume: response.data.total_volumes[index][1]
-    }));
+    // Форматирование данных
+    const formattedData = response.data.prices.map((price, index) => {
+      const open = index === 0 ? price[1] : response.data.prices[index - 1][1];
+      const close = price[1];
+      const high = Math.max(...response.data.prices.slice(Math.max(index - 15, 0), index + 1).map(p => p[1]));
+      const low = Math.min(...response.data.prices.slice(Math.max(index - 15, 0), index + 1).map(p => p[1]));
+      const volume = response.data.total_volumes[index][1];
+
+      return {
+        time: price[0],
+        open,
+        high,
+        low,
+        close,
+        volume
+      };
+    });
 
     res.json(formattedData);
   } catch (error) {
