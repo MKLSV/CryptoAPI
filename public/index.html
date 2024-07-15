@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Price Service</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Crypto Price Service</h1>
+  <div>
+    <label for="cryptoId">Choose a cryptocurrency:</label>
+    <select id="cryptoId">
+      <option value="bitcoin">Bitcoin</option>
+      <option value="ethereum">Ethereum</option>
+      <option value="litecoin">Litecoin</option>
+      <option value="ripple">Ripple</option>
+      <option value="dogecoin">Dogecoin</option>
+    </select>
+  </div>
+  <div>
+    <button onclick="getRealTimeData()">Get Real-Time Data</button>
+    <button onclick="getHistoricalData()">Get Historical Data</button>
+    <button onclick="downloadCSV()">Download Historical Data as CSV</button>
+  </div>
+  <pre id="output"></pre>
+  <script src="script.js"></script>
+</body>
+</html>
