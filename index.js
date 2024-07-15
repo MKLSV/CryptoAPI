@@ -1,9 +1,10 @@
 const express = require('express');
 const axios = require('axios');
+const csvWriter = require('csv-writer').createObjectCsvStringifier;
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Получение полных исторических данных за последний месяц с 15-минутным таймфреймом
+// Получение полных исторических данных за последний месяц с 15-минутным таймфреймом и возможность скачивания CSV файла
 app.get('/historical/:cryptoId', async (req, res) => {
   const cryptoId = req.params.cryptoId;
   try {
@@ -26,7 +27,7 @@ app.get('/historical/:cryptoId', async (req, res) => {
       const volume = response.data.total_volumes[index][1];
 
       return {
-        time: price[0],
+        date: new Date(price[0]).toISOString(),
         open,
         high,
         low,
@@ -35,7 +36,25 @@ app.get('/historical/:cryptoId', async (req, res) => {
       };
     });
 
-    res.json(formattedData);
+    if (req.query.format === 'csv') {
+      const csvStringifier = new csvWriter({
+        header: [
+          {id: 'date', title: 'date'},
+          {id: 'open', title: 'open'},
+          {id: 'high', title: 'high'},
+          {id: 'low', title: 'low'},
+          {id: 'close', title: 'close'},
+          {id: 'volume', title: 'volume'}
+        ]
+      });
+
+      const csvData = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(formattedData);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${cryptoId}_historical_data.csv"`);
+      res.send(csvData);
+    } else {
+      res.json(formattedData);
+    }
   } catch (error) {
     res.status(500).json({ error: 'Error fetching historical data from CoinGecko API' });
   }
