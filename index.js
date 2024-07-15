@@ -3,7 +3,7 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Получение исторических данных за последний месяц с 15-минутным таймфреймом
+// Получение полных исторических данных за последний месяц с 15-минутным таймфреймом
 app.get('/historical/:cryptoId', async (req, res) => {
   const cryptoId = req.params.cryptoId;
   try {
@@ -16,7 +16,17 @@ app.get('/historical/:cryptoId', async (req, res) => {
         to: endDate
       }
     });
-    res.json(response.data);
+
+    const formattedData = response.data.prices.map((price, index) => ({
+      time: price[0],
+      open: response.data.prices[index][1],
+      high: response.data.high_24h ? response.data.high_24h[index][1] : null,
+      low: response.data.low_24h ? response.data.low_24h[index][1] : null,
+      close: response.data.prices[index][1],
+      volume: response.data.total_volumes[index][1]
+    }));
+
+    res.json(formattedData);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching historical data from CoinGecko API' });
   }
