@@ -1,0 +1,22 @@
+{
+  "name": "crypto-price-service",
+  "version": "1.0.0",
+  "description": "A Node.js service to fetch cryptocurrency prices in real-time and historical data",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "cryptocurrency",
+    "price",
+    "real-time",
+    "historical",
+    "api"
+  ],
+  "author": "Your Name",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "express": "^4.17.1"
+  }
+}
