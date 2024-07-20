@@ -49,10 +49,14 @@ app.get('/get-data', async (req, res) => {
       }
     });
 
-    const csv = convertToCsv(response.data);
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="data.csv"');
-    res.send(csv);
+    if (response.data.result && response.data.result.list) {
+      const csv = convertToCsv(response.data);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="data.csv"');
+      res.send(csv);
+    } else {
+      throw new Error('No data in response from Bybit API');
+    }
   } catch (error) {
     console.error('Error fetching data from Bybit API:', error.message);
     res.status(500).json({ error: `Error fetching data from Bybit API: ${error.message}` });
