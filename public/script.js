@@ -1,18 +1,28 @@
-async function getRealTimeData() {
-  const cryptoId = document.getElementById('cryptoId').value;
-  const response = await fetch(`/price/${cryptoId}`);
-  const data = await response.json();
-  document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-}
+async function getData() {
+  const category = document.getElementById('category').value;
+  const symbol = document.getElementById('symbol').value;
+  const interval = document.getElementById('interval').value;
+  const start = document.getElementById('start').value;
+  const end = document.getElementById('end').value;
 
-async function getHistoricalData() {
-  const cryptoId = document.getElementById('cryptoId').value;
-  const response = await fetch(`/historical/${cryptoId}`);
-  const data = await response.json();
-  document.getElementById('output').textContent = JSON.stringify(data, null, 2);
-}
+  try {
+    const response = await fetch(`/get-data?category=${category}&symbol=${symbol}&interval=${interval}&start=${start}&end=${end}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
 
-function downloadCSV() {
-  const cryptoId = document.getElementById('cryptoId').value;
-  window.location.href = `/historical/${cryptoId}?format=csv`;
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'data.csv';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error:', error);
+    document.getElementById('output').textContent = `Error: ${error.message}`;
+  }
 }
