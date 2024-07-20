@@ -1,58 +1,41 @@
 const express = require('express');
-const axios = require('axios');
+const { RestClientV5 } = require('bybit-api');
 const csvWriter = require('csv-writer').createObjectCsvStringifier;
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const client = new RestClientV5({
+    testnet: true, // Установите в false для использования основного API
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Получение полных исторических данных за последний месяц с 15-минутным таймфреймом и возможность скачивания CSV файла
+// Получение полных исторических данных с 15-минутным таймфреймом и возможность скачивания CSV файла
 app.get('/historical/:cryptoId', async (req, res) => {
   const cryptoId = req.params.cryptoId;
+  const interval = '15'; // 15-минутный таймфрейм
+  const endDate = Math.floor(Date.now() / 1000); // Текущая дата в формате Unix Timestamp
+  const startDate = endDate - (30 * 24 * 60 * 60); // 30 дней назад
+
   try {
-    const endDate = Math.floor(Date.now() / 1000); // Текущая дата в формате Unix Timestamp
-    const startDate = endDate - (30 * 24 * 60 * 60); // 30 дней назад
-    const response = await axios.get(`https://api.coingecko.com/api/v3/coins/${cryptoId}/market_chart/range`, {
-      params: {
-        vs_currency: 'usd',
-        from: startDate,
-        to: endDate
-      }
+    const response = await client.getKline({
+      category: 'linear', // Используем категорию 'linear' для большинства торговых пар
+      symbol: `${cryptoId.toUpperCase()}USD`,
+      interval,
+      start: startDate * 1000,
+      end: endDate * 1000,
     });
 
-    // Агрегация данных для 15-минутного интервала
-    const prices = response.data.prices;
-    const volumes = response.data.total_volumes;
-    const aggregatedData = [];
-
-    for (let i = 0; i < prices.length; i += 1) {
-      const timestamp = prices[i][0];
-      const open = prices[i][1];
-      let high = prices[i][1];
-      let low = prices[i][1];
-      let close = prices[i][1];
-      let volume = volumes[i][1];
-
-      for (let j = 1; j < 4 && i + j < prices.length; j++) {
-        high = Math.max(high, prices[i + j][1]);
-        low = Math.min(low, prices[i + j][1]);
-        close = prices[i + j][1];
-        volume += volumes[i + j][1];
-      }
-
-      aggregatedData.push({
-        date: new Date(timestamp).toISOString(),
-        open,
-        high,
-        low,
-        close,
-        volume
-      });
-
-      // Пропускаем следующие 3 записи, чтобы перейти к следующему 15-минутному интервалу
-      i += 3;
-    }
+    // Форматирование данных
+    const formattedData = response.result.list.map(data => ({
+      date: new Date(data.startTime).toISOString(),
+      open: data.open,
+      high: data.high,
+      low: data.low,
+      close: data.close,
+      volume: data.volume,
+    }));
 
     if (req.query.format === 'csv') {
       const csvStringifier = new csvWriter({
@@ -66,15 +49,15 @@ app.get('/historical/:cryptoId', async (req, res) => {
         ]
       });
 
-      const csvData = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(aggregatedData);
+      const csvData = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(formattedData);
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="${cryptoId}_historical_data.csv"`);
       res.send(csvData);
     } else {
-      res.json(aggregatedData);
+      res.json(formattedData);
     }
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching historical data from CoinGecko API' });
+    res.status(500).json({ error: 'Error fetching historical data from Bybit API' });
   }
 });
 
@@ -82,16 +65,26 @@ app.get('/historical/:cryptoId', async (req, res) => {
 app.get('/price/:cryptoId', async (req, res) => {
   const cryptoId = req.params.cryptoId;
   try {
-    const response = await axios.get(`https://api.coingecko.com/api/v3/simple/price`, {
-      params: {
-        ids: cryptoId,
-        vs_currencies: 'usd',
-        include_last_updated_at: true
-      }
+    const response = await client.getKline({
+      category: 'linear',
+      symbol: `${cryptoId.toUpperCase()}USD`,
+      interval: '1',
+      limit: 1,
     });
-    res.json(response.data);
+
+    const latestData = response.result.list[0];
+    const formattedData = {
+      date: new Date(latestData.startTime).toISOString(),
+      open: latestData.open,
+      high: latestData.high,
+      low: latestData.low,
+      close: latestData.close,
+      volume: latestData.volume,
+    };
+
+    res.json(formattedData);
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching real-time data from CoinGecko API' });
+    res.status(500).json({ error: 'Error fetching real-time data from Bybit API' });
   }
 });
 
