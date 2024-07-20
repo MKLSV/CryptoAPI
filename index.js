@@ -21,42 +21,57 @@ app.get('/historical/:cryptoId', async (req, res) => {
       }
     });
 
-    // Форматирование данных
-    const formattedData = response.data.prices.map((price, index) => {
-      const open = index === 0 ? price[1] : response.data.prices[index - 1][1];
-      const close = price[1];
-      const high = Math.max(...response.data.prices.slice(Math.max(index - 3, 0), index + 1).map(p => p[1]));
-      const low = Math.min(...response.data.prices.slice(Math.max(index - 3, 0), index + 1).map(p => p[1]));
-      const volume = response.data.total_volumes[index][1];
+    // Агрегация данных для 15-минутного интервала
+    const prices = response.data.prices;
+    const volumes = response.data.total_volumes;
+    const aggregatedData = [];
 
-      return {
-        date: new Date(price[0]).toISOString(),
+    for (let i = 0; i < prices.length; i += 1) {
+      const timestamp = prices[i][0];
+      const open = prices[i][1];
+      let high = prices[i][1];
+      let low = prices[i][1];
+      let close = prices[i][1];
+      let volume = volumes[i][1];
+
+      for (let j = 1; j < 4 && i + j < prices.length; j++) {
+        high = Math.max(high, prices[i + j][1]);
+        low = Math.min(low, prices[i + j][1]);
+        close = prices[i + j][1];
+        volume += volumes[i + j][1];
+      }
+
+      aggregatedData.push({
+        date: new Date(timestamp).toISOString(),
         open,
         high,
         low,
         close,
         volume
-      };
-    }).filter((data, index) => index % 4 === 0); // Отфильтровать данные, чтобы получить каждые 15 минут
+      });
+
+      // Пропускаем следующие 3 записи, чтобы перейти к следующему 15-минутному интервалу
+      i += 3;
+    }
 
     if (req.query.format === 'csv') {
       const csvStringifier = new csvWriter({
         header: [
-          {id: 'date', title: 'date'},
-          {id: 'open', title: 'open'},
-          {id: 'high', title: 'high'},
-          {id: 'low', title: 'low'},
-          {id: 'close', title: 'close'},
-          {id: 'volume', title: 'volume'}
+          { id: 'date', title: 'date' },
+          { id: 'open', title: 'open' },
+          { id: 'high', title: 'high' },
+          { id: 'low', title: 'low' },
+          { id: 'close', title: 'close' },
+          { id: 'volume', title: 'volume' }
         ]
       });
 
-      const csvData = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(formattedData);
+      const csvData = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(aggregatedData);
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="${cryptoId}_historical_data.csv"`);
       res.send(csvData);
     } else {
-      res.json(formattedData);
+      res.json(aggregatedData);
     }
   } catch (error) {
     res.status(500).json({ error: 'Error fetching historical data from CoinGecko API' });
