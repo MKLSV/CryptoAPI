@@ -1,12 +1,14 @@
 const express = require('express');
-const { RestClientV5 } = require('bybit-api');
+const { RESTClient } = require('bybit-api');
 const csvWriter = require('csv-writer').createObjectCsvStringifier;
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const client = new RestClientV5({
+const client = new RESTClient({
     testnet: true, // Установите в false для использования основного API
+    apiKey: 'YOUR_API_KEY',
+    apiSecret: 'YOUR_API_SECRET'
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -21,10 +23,10 @@ app.get('/historical/:cryptoId', async (req, res) => {
   try {
     const response = await client.getKline({
       category: 'linear', // Используем категорию 'linear' для большинства торговых пар
-      symbol: `${cryptoId.toUpperCase()}USD`,
+      symbol: `${cryptoId.toUpperCase()}USDT`,
       interval,
-      start: startDate * 1000,
-      end: endDate * 1000,
+      from: startDate * 1000,
+      to: endDate * 1000,
     });
 
     // Форматирование данных
@@ -67,7 +69,7 @@ app.get('/price/:cryptoId', async (req, res) => {
   try {
     const response = await client.getKline({
       category: 'linear',
-      symbol: `${cryptoId.toUpperCase()}USD`,
+      symbol: `${cryptoId.toUpperCase()}USDT`,
       interval: '1',
       limit: 1,
     });
