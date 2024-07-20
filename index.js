@@ -26,37 +26,42 @@ app.get('/historical/:cryptoId', async (req, res) => {
       }
     });
 
-    // Форматирование данных
-    const formattedData = response.data.result.list.map(data => ({
-      date: new Date(parseInt(data[0])).toISOString(),
-      open: parseFloat(data[1]),
-      high: parseFloat(data[2]),
-      low: parseFloat(data[3]),
-      close: parseFloat(data[4]),
-      volume: parseFloat(data[5]),
-    }));
+    if (response.data.result && response.data.result.list) {
+      // Форматирование данных
+      const formattedData = response.data.result.list.map(data => ({
+        date: new Date(parseInt(data[0])).toISOString(),
+        open: parseFloat(data[1]),
+        high: parseFloat(data[2]),
+        low: parseFloat(data[3]),
+        close: parseFloat(data[4]),
+        volume: parseFloat(data[5]),
+      }));
 
-    if (req.query.format === 'csv') {
-      const csvStringifier = createObjectCsvStringifier({
-        header: [
-          { id: 'date', title: 'date' },
-          { id: 'open', title: 'open' },
-          { id: 'high', title: 'high' },
-          { id: 'low', title: 'low' },
-          { id: 'close', title: 'close' },
-          { id: 'volume', title: 'volume' }
-        ]
-      });
+      if (req.query.format === 'csv') {
+        const csvStringifier = createObjectCsvStringifier({
+          header: [
+            { id: 'date', title: 'date' },
+            { id: 'open', title: 'open' },
+            { id: 'high', title: 'high' },
+            { id: 'low', title: 'low' },
+            { id: 'close', title: 'close' },
+            { id: 'volume', title: 'volume' }
+          ]
+        });
 
-      const csvData = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(formattedData);
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename="${cryptoId}_historical_data.csv"`);
-      res.send(csvData);
+        const csvData = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(formattedData);
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${cryptoId}_historical_data.csv"`);
+        res.send(csvData);
+      } else {
+        res.json(formattedData);
+      }
     } else {
-      res.json(formattedData);
+      throw new Error('No data in response from Bybit API');
     }
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching historical data from Bybit API' });
+    console.error('Error fetching historical data from Bybit API:', error.message);
+    res.status(500).json({ error: `Error fetching historical data from Bybit API: ${error.message}` });
   }
 });
 
@@ -73,19 +78,24 @@ app.get('/price/:cryptoId', async (req, res) => {
       }
     });
 
-    const latestData = response.data.result.list[0];
-    const formattedData = {
-      date: new Date(parseInt(latestData[0])).toISOString(),
-      open: parseFloat(latestData[1]),
-      high: parseFloat(latestData[2]),
-      low: parseFloat(latestData[3]),
-      close: parseFloat(latestData[4]),
-      volume: parseFloat(latestData[5]),
-    };
+    if (response.data.result && response.data.result.list) {
+      const latestData = response.data.result.list[0];
+      const formattedData = {
+        date: new Date(parseInt(latestData[0])).toISOString(),
+        open: parseFloat(latestData[1]),
+        high: parseFloat(latestData[2]),
+        low: parseFloat(latestData[3]),
+        close: parseFloat(latestData[4]),
+        volume: parseFloat(latestData[5]),
+      };
 
-    res.json(formattedData);
+      res.json(formattedData);
+    } else {
+      throw new Error('No data in response from Bybit API');
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching real-time data from Bybit API' });
+    console.error('Error fetching real-time data from Bybit API:', error.message);
+    res.status(500).json({ error: `Error fetching real-time data from Bybit API: ${error.message}` });
   }
 });
 
