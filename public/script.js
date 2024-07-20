@@ -2,8 +2,8 @@ async function getData() {
   const category = document.getElementById('category').value;
   const symbol = document.getElementById('symbol').value;
   const interval = document.getElementById('interval').value;
-  const start = document.getElementById('start').value;
-  const end = document.getElementById('end').value;
+  const start = new Date(document.getElementById('start').value).getTime();
+  const end = new Date(document.getElementById('end').value).getTime();
 
   try {
     const response = await fetch(`/get-data?category=${category}&symbol=${symbol}&interval=${interval}&start=${start}&end=${end}`);
