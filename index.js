@@ -38,6 +38,8 @@ function convertToCsv(data) {
 // Маршрут для получения данных и перевода их в CSV
 app.get('/get-data', async (req, res) => {
   const { category, symbol, interval, start, end } = req.query;
+  console.log(`Start: ${new Date(parseInt(start)).toISOString()}, End: ${new Date(parseInt(end)).toISOString()}`);
+
   try {
     const response = await axios.get('https://api.bybit.com/v5/market/kline', {
       params: {
