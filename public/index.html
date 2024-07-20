@@ -9,27 +9,27 @@
 <body>
   <h1>Crypto Price Service</h1>
   <div>
-    <label for="cryptoId">Choose a cryptocurrency:</label>
-    <select id="cryptoId">
-      <option value="bitcoin">Bitcoin (BTC/USDT)</option>
-      <option value="ethereum">Ethereum (ETH/USDT)</option>
-      <option value="litecoin">Litecoin (LTC/USDT)</option>
-      <option value="ripple">Ripple (XRP/USDT)</option>
-      <option value="dogecoin">Dogecoin (DOGE/USDT)</option>
-      <option value="cardano">Cardano (ADA/USDT)</option>
-      <option value="polkadot">Polkadot (DOT/USDT)</option>
-      <option value="binancecoin">Binance Coin (BNB/USDT)</option>
-      <option value="chainlink">Chainlink (LINK/USDT)</option>
-      <option value="uniswap">Uniswap (UNI/USDT)</option>
-      <option value="solana">Solana (SOL/USDT)</option>
-      <option value="stellar">Stellar (XLM/USDT)</option>
-      <option value="vechain">VeChain (VET/USDT)</option>
-    </select>
+    <label for="category">Category:</label>
+    <input type="text" id="category" value="inverse">
   </div>
   <div>
-    <button onclick="getRealTimeData()">Get Real-Time Data</button>
-    <button onclick="getHistoricalData()">Get Historical Data</button>
-    <button onclick="downloadCSV()">Download Historical Data as CSV</button>
+    <label for="symbol">Symbol:</label>
+    <input type="text" id="symbol" value="SOLUSD">
+  </div>
+  <div>
+    <label for="interval">Interval:</label>
+    <input type="text" id="interval" value="15">
+  </div>
+  <div>
+    <label for="start">Start Timestamp:</label>
+    <input type="text" id="start" value="1719781200000">
+  </div>
+  <div>
+    <label for="end">End Timestamp:</label>
+    <input type="text" id="end" value="1721487484196">
+  </div>
+  <div>
+    <button onclick="getData()">Get Data as CSV</button>
   </div>
   <pre id="output"></pre>
   <script src="script.js"></script>
