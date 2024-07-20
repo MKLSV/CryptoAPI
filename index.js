@@ -1,14 +1,13 @@
 const express = require('express');
-const { RESTClient } = require('bybit-api');
+const { RestClientV5 } = require('bybit-api');
 const csvWriter = require('csv-writer').createObjectCsvStringifier;
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const client = new RESTClient({
-    testnet: true, // Установите в false для использования основного API
-    apiKey: 'YOUR_API_KEY',
-    apiSecret: 'YOUR_API_SECRET'
+const client = new RestClientV5({
+    key: '7JjEZzF7TzmnJrPoKh',
+    secret: 'x0SI79KVcbuyKRqBWCgCwG3OpSxYL70yOgTx',
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -17,26 +16,26 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/historical/:cryptoId', async (req, res) => {
   const cryptoId = req.params.cryptoId;
   const interval = '15'; // 15-минутный таймфрейм
-  const endDate = Math.floor(Date.now() / 1000); // Текущая дата в формате Unix Timestamp
-  const startDate = endDate - (30 * 24 * 60 * 60); // 30 дней назад
+  const endDate = Date.now(); // Текущая дата в формате Unix Timestamp
+  const startDate = endDate - (30 * 24 * 60 * 60 * 1000); // 30 дней назад
 
   try {
     const response = await client.getKline({
       category: 'linear', // Используем категорию 'linear' для большинства торговых пар
       symbol: `${cryptoId.toUpperCase()}USDT`,
       interval,
-      from: startDate * 1000,
-      to: endDate * 1000,
+      start: startDate,
+      end: endDate,
     });
 
     // Форматирование данных
     const formattedData = response.result.list.map(data => ({
-      date: new Date(data.startTime).toISOString(),
-      open: data.open,
-      high: data.high,
-      low: data.low,
-      close: data.close,
-      volume: data.volume,
+      date: new Date(parseInt(data[0])).toISOString(),
+      open: parseFloat(data[1]),
+      high: parseFloat(data[2]),
+      low: parseFloat(data[3]),
+      close: parseFloat(data[4]),
+      volume: parseFloat(data[5]),
     }));
 
     if (req.query.format === 'csv') {
@@ -70,18 +69,18 @@ app.get('/price/:cryptoId', async (req, res) => {
     const response = await client.getKline({
       category: 'linear',
       symbol: `${cryptoId.toUpperCase()}USDT`,
-      interval: '1',
+      interval: '15',
       limit: 1,
     });
 
     const latestData = response.result.list[0];
     const formattedData = {
-      date: new Date(latestData.startTime).toISOString(),
-      open: latestData.open,
-      high: latestData.high,
-      low: latestData.low,
-      close: latestData.close,
-      volume: latestData.volume,
+      date: new Date(parseInt(latestData[0])).toISOString(),
+      open: parseFloat(latestData[1]),
+      high: parseFloat(latestData[2]),
+      low: parseFloat(latestData[3]),
+      close: parseFloat(latestData[4]),
+      volume: parseFloat(latestData[5]),
     };
 
     res.json(formattedData);
