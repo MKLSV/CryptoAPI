@@ -25,8 +25,8 @@ app.get('/historical/:cryptoId', async (req, res) => {
     const formattedData = response.data.prices.map((price, index) => {
       const open = index === 0 ? price[1] : response.data.prices[index - 1][1];
       const close = price[1];
-      const high = Math.max(...response.data.prices.slice(Math.max(index - 15, 0), index + 1).map(p => p[1]));
-      const low = Math.min(...response.data.prices.slice(Math.max(index - 15, 0), index + 1).map(p => p[1]));
+      const high = Math.max(...response.data.prices.slice(Math.max(index - 3, 0), index + 1).map(p => p[1]));
+      const low = Math.min(...response.data.prices.slice(Math.max(index - 3, 0), index + 1).map(p => p[1]));
       const volume = response.data.total_volumes[index][1];
 
       return {
