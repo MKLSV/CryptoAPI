@@ -5,6 +5,8 @@ async function getData() {
   const start = new Date(document.getElementById('start').value).getTime();
   const end = new Date(document.getElementById('end').value).getTime();
 
+  console.log(`Start: ${new Date(start).toISOString()}, End: ${new Date(end).toISOString()}`);
+
   try {
     const response = await fetch(`/get-data?category=${category}&symbol=${symbol}&interval=${interval}&start=${start}&end=${end}`);
     
