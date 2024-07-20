@@ -37,7 +37,7 @@ app.get('/historical/:cryptoId', async (req, res) => {
         close,
         volume
       };
-    });
+    }).filter((data, index) => index % 4 === 0); // Отфильтровать данные, чтобы получить каждые 15 минут
 
     if (req.query.format === 'csv') {
       const csvStringifier = new csvWriter({
